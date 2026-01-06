@@ -282,7 +282,7 @@ Las contribuciones son bienvenidas. Por favor lee [CONTRIBUTING.md](CONTRIBUTING
 
 **Norberto Velez**
 
-- 💼 LinkedIn: [linkedin.com/in/tu-perfil](www.linkedin.com/in/norberto-velez-672916172)
+- 💼 LinkedIn: www.linkedin.com/in/norberto-velez-672916172
 - 📧 Email: nnvelez95@gmail.com
 - 🐙 GitHub: [@nnvelez95](https://github.com/nnvelez95)
 
