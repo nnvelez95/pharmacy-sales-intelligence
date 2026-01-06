@@ -2,6 +2,7 @@
 Gestor de datos que coordina cifrado/descifrado y carga segura.
 """
 import tempfile
+import os
 from pathlib import Path
 from typing import List, Union
 
@@ -72,7 +73,7 @@ class SecureDataManager:
     ) -> pd.DataFrame:
         """
         Carga un CSV cifrado directamente a DataFrame.
-        El archivo descifrado NUNCA se guarda en disco.
+        El archivo descifrado NUNCA se guarda en disco permanentemente.
 
         Args:
             encrypted_file: Archivo .enc cifrado
@@ -88,13 +89,22 @@ class SecureDataManager:
         if not encrypted_file.exists():
             raise FileNotFoundError(f"Archivo cifrado no encontrado: {encrypted_file}")
 
-        # Descifrar a memoria temporal (sin guardar)
-        with tempfile.NamedTemporaryFile(mode="wb", delete=True, suffix=".csv") as tmp_file:
-            self.encryptor.decrypt_file(encrypted_file, tmp_file.name)
+        # Crear archivo temporal con delete=False para Windows
+        tmp_file = tempfile.NamedTemporaryFile(
+            mode="wb", 
+            delete=False,  # ✅ CAMBIO: No eliminar automáticamente
+            suffix=".csv"
+        )
+        tmp_path = tmp_file.name
+        tmp_file.close()  # ✅ CAMBIO: Cerrar antes de usar
+
+        try:
+            # Descifrar al archivo temporal
+            self.encryptor.decrypt_file(encrypted_file, tmp_path)
 
             # Leer desde el archivo temporal
             df = pd.read_csv(
-                tmp_file.name,
+                tmp_path,
                 encoding=encoding,
                 sep=sep,
                 skiprows=skiprows,
@@ -102,6 +112,14 @@ class SecureDataManager:
             df.columns = df.columns.str.strip()
 
             logger.debug(f"CSV cargado: {encrypted_file.name} ({len(df)} filas)")
+
+        finally:
+            # ✅ CAMBIO: Eliminar manualmente el archivo temporal
+            try:
+                if os.path.exists(tmp_path):
+                    os.unlink(tmp_path)
+            except Exception as e:
+                logger.warning(f"No se pudo eliminar archivo temporal: {e}")
 
         return df
 
